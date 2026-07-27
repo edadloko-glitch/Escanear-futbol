@@ -1,0 +1,37 @@
+name: VIP Apuestas CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+      
+      - name: Verificar sintaxis
+        run: |
+          python -m py_compile script.py
+          echo "✅ script.py compila correctamente"
+      
+      - name: Prueba simple
+        run: |
+          python -c "import sys; print('✅ Python', sys.version); print('✅ Sistema OK')"
