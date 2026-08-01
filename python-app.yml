@@ -1,0 +1,98 @@
+import asyncio
+import aiohttp
+
+class TelegramNotificationEngine:
+    def __init__(self, bot_token, chat_id):
+        """
+        bot_token: El token de seguridad que te da @BotFather en Telegram.
+        chat_id: El ID de tu canal privado o chat personal.
+        """
+        self.bot_token = bot_token
+        self.chat_id = chat_id
+        self.api_url = f"https://telegram.org{bot_token}/sendMessage"
+
+    def _build_professional_template(self, opportunity_data):
+        """
+        Diseña un formato visual estricto, limpio y scannable para el operador.
+        """
+        opp = opportunity_data
+        
+        template = (
+            f"🚨 <b>¡ANOMALÍA DETECTADA POR EL ALGORITMO!</b> 🚨\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚽ <b>Partido:</b> {opp['match']}\n"
+            f"📊 <b>Mercado:</b> {opp['market']}\n\n"
+            
+            f"📉 <b>Movimiento Global (Asia):</b>\n"
+            f"  └ El mercado se desplomó un: <b>-{opp['drop_magnitude']}%</b>\n"
+            f"  └ Cuota justa de referencia: <code>{opp['efficient_odds']}</code>\n\n"
+            
+            f"🏢 <b>Ineficiencia Local Localizada:</b>\n"
+            f"  └ Casa de Apuestas: <b>{opp['local_bookmaker']}</b>\n"
+            f"  └ Cuota CONGELADA: <pre>{opp['stale_odds']}</pre>\n\n"
+            
+            f"💰 <b>Análisis Financiero de Inversión:</b>\n"
+            f"  └ Ventaja Matemática (Edge): <b>+{opp['edge_percentage']}%</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚡ <i>Operar de inmediato. Ventana de corrección estimada: &lt; 3 min.</i>"
+        )
+        return template
+
+    async def send_value_alert_async(self, opportunity_data):
+        """
+        Envía la alerta de forma asíncrona para no congelar el flujo de escaneo principal.
+        """
+        text_message = self._build_professional_template(opportunity_data)
+        
+        payload = {
+            "chat_id": self.chat_id,
+            "text": text_message,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
+        }
+        
+        # Abrimos una sesión HTTP cliente asíncrona de alta velocidad
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(self.api_url, json=payload) as response:
+                    if response.status == 200:
+                        print(f"✅ Alerta despachada con éxito a Telegram para: {opportunity_data['match']}")
+                        return True
+                    else:
+                        response_text = await response.text()
+                        print(f"❌ Error en API de Telegram. Status: {response.status} | Msg: {response_text}")
+                        return False
+            except Exception as e:
+                print(f"❌ Error de conexión crítico en el módulo de alertas: {str(e)}")
+                return False
+
+# =====================================================================
+# DEMOSTRACIÓN DE EJECUCIÓN (ORQUESTADOR)
+# =====================================================================
+async def main():
+    # Reemplazar con tus credenciales reales al poner en producción
+    BOT_TOKEN = "TU_BOT_TOKEN_AQUI"
+    CHAT_ID = "TU_CHAT_ID_AQUI"
+    
+    # Inicializar el motor de alertas
+    notifier = TelegramNotificationEngine(bot_token=BOT_TOKEN, chat_id=CHAT_ID)
+    
+    # Datos simulados que el escáner de 'Dropping Odds' acaba de descubrir
+    mock_opportunity = {
+        "match": "Real Madrid vs Barcelona",
+        "market": "Más de 2.5 Goles Totales",
+        "drop_magnitude": 11.4,
+        "efficient_odds": 1.62,
+        "local_bookmaker": "BetPlay / Wplay (Local)",
+        "stale_odds": 1.95,
+        "edge_percentage": 20.37
+    }
+    
+    # Ejecutamos el envío simulado
+    print("🤖 IA procesando anomalía... Enviando webhook de alta prioridad...")
+    await notifier.send_value_alert_async(mock_opportunity)
+
+# Activa el bucle asíncrono si ejecutas el script directamente
+if __name__ == "__main__":
+    asyncio.run(main())
+    
